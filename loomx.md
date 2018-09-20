@@ -187,3 +187,111 @@ https://github.com/loomnetwork/transfer-gateway-example
 А что вообще у loomx за чейн, на чем он работает, как его безопасность, EVM-ли у него, и если да, то как они сделали DPoS? Сообщество инспектировало? Об этом почему-то нигде нет. Запускается он через бинарник. Нигде в 73 репах нет сорцов, в статье и доках нет никакой инфы. Это закрытый код. 
 
 https://loomx.io/developers/docs/en/delegated-proof-of-stake.html
+
+Loom supports EVM (Ethereum Virtual Machine) and plugin-based smart contracts. Plugin-based smart contracts can be created with go-loom, for example.
+
+
+## Transfer Gateway Example
+This project is built using the loom-js Transfer Gateway API, and demonstrates how to transfer ERC721/ERC20 tokens between Ethereum and Loom DAppChains via a browser frontend built with React.
+
+Пытаюсь запустить – ни хера не работает, 
+```
+bundle.js:133733 Uncaught (in promise) TypeError: Cannot read property 'address' of undefined
+    at Function.createAsync (bundle.js:133733)
+```
+
+Смотрю их советы
+
+    **Troubleshooting**
+    If you stop the example and start it up again you may encounter a MetaMask error like this:
+    "rpc error with payload {…nonce. account has nonce of: 0 tx has nonce of: 5"
+
+    This happens because MetaMask keeps track of the last nonce that was used to send a transaction with a particular account, and when all the chains are reset the nonce needs to be reset back to zero. You can force MetaMask to reset the nonce by reseting the imported account.
+
+    Restart the entire service can help to clean cache also ./transfer_gateway restart, after restart you should clean MetaMask cache.
+
+    Sometimes when run ./transfer_gateway start and a message like Ganache port 8545 is already in use appears it's because the service ganache is running (obvious), however if you never ran ./transfer_gateway start then it's because another agent started ganache and this example starts it self ganache version.
+
+    In order to stop all services (used by cards-gateway-example) you should run ./transfer_gateway stop, however if services like ganache or webpack didn't halt then you need to stop then by the process id or pid.
+
+Не помогает. Переставлял метамаск, перезагружал несколько раз.
+
+Попытался сам найти ошибку – увидел, что тут networks пуст
+(dc_card_manager.js)
+```
+    const contract = new web3.eth.Contract(
+      DC_CRYPTO_CARDS_JSON.abi,
+      DC_CRYPTO_CARDS_JSON.networks[networkId].address,
+      { from }
+    )
+```
+
+Вписал туда 0x49f5c0fc8b951060604e145308efffdc31d9bb3f из crypto_cards_dappchain_address
+
+```
+    const contract = new web3.eth.Contract(
+      DC_CRYPTO_CARDS_JSON.abi,
+      "0x49f5c0fc8b951060604e145308efffdc31d9bb3f",
+      { from }
+    )
+```
+
+Делаю по аналогии:
+
+```
+transfer-gateway-example/webclient/src/dc_managers/dc_card_manager.js:
+   44  
+   45      const contract = new web3.eth.Contract(
+   46:       DC_CRYPTO_CARDS_JSON.abi,
+   47        "0x49f5c0fc8b951060604e145308efffdc31d9bb3f",
+   48        { from }
+
+transfer-gateway-example/webclient/src/dc_managers/dc_token_manager.js:
+   41  
+   42      const contract = new web3.eth.Contract(
+   43:       DC_GAME_TOKEN_JSON.abi,
+   44        "0x85fb9206da279c05d007d5885dd0dfdd04257778",
+   45        { from }
+
+transfer-gateway-example/webclient/src/eth_managers/eth_card_manager.js:
+    7      const networkId = await browserWeb3.eth.net.getId()
+    8      const contract = new browserWeb3.eth.Contract(
+    9:       CRYPTO_CARDS_JSON.abi,
+   10        "0x9e51aeeeca736cd81d27e025465834b8ec08628a"
+   11      )
+
+transfer-gateway-example/webclient/src/eth_managers/eth_gateway_manager.js:
+    7      const networkId = await browserWeb3.eth.net.getId()
+    8      const contract = new browserWeb3.eth.Contract(
+    9:       GATEWAY_JSON.abi,
+   10        "0xf5cad0db6415a71a5bc67403c87b56b629b4ddaa"
+   11      )
+
+transfer-gateway-example/webclient/src/eth_managers/eth_token_manager.js:
+    7  
+    8      const contract = new browserWeb3.eth.Contract(
+    9:       GAME_TOKEN_JSON.abi,
+   10        "0x1aa76056924bf4768d63357eca6d6a56ec929131"
+   11      )
+```
+
+Приложение не запускается, никаких ошибок, просто на localhost:8080 ничего не происходит. Такое уже было и раньше, где-то через раз.
+
+Когда останавливаю приложение – пишет, что 
+```
+Stop DApp
+./transfer_gateway: line 173: kill: (37750) - No such process
+```
+
+Ну да, просто не стартует.
+
+Захожу в билды truffle-ethereum/build – адреса совпадают.
+
+Делаю git stash.
+
+Проблема явно в файлах этих константах DC_CRYPTO_CARDS_JSON, которые хз откуда берутся, как-то из билдов по лучаются. Притом в билдах адреса есть
+
+Бросаю нахер эту возню и начинаю заниматься parity-bridge
+
+Еще разок пытаюсь запустить, но опять не стартует, притом что был git stash, я все свои изменения откатил.
+https://github.com/loomnetwork/transfer-gateway-example

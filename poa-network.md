@@ -39,3 +39,7 @@ https://poa.network/governance
 The Honey Badger Byzantine Fault Tolerant (HBBFT) algorithm is in development to support an alternative consensus mechanism for blockchain transactions. Built in Rust, this modular library allows nodes in a distributed, potentially asynchronous environment to achieve agreement on transactions. The agreement process does not require a leader node, tolerates corrupted nodes, and makes progress in adverse network conditions.
 
 https://poa.network/dapps
+
+## poanetwork: bridge-nodejs
+Вроде как тут две сетки разворачиваются, и между ними идут транзакции через offchain wather'ы
+https://github.com/poanetwork/bridge-nodejs
